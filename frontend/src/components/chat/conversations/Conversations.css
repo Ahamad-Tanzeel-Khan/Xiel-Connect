@@ -1,0 +1,31 @@
+.conversations-container{
+    display: flex;
+    flex-direction: column;
+    height: 78vh;
+}
+.conversations-title{
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+.conversations-tiles{
+    flex-grow: 1;
+    overflow-y: scroll;
+}
+.no-conversation-available{
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+}
+
+@media only screen and (max-width: 990px) {
+    .conversations-container{
+        height: 80vh;
+    }
+}
+@media only screen and (max-width: 480px) {
+    .conversations-container{
+        height: 80%;
+    }
+}

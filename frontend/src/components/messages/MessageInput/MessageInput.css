@@ -1,0 +1,40 @@
+.msg-input-form{
+    width: 100%;
+    padding: 20px;
+}
+.msg-input-container{
+    display: flex;
+    color: #7085e6;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+.msg-text-input{
+    background-color: #3e4a56;
+    border: none;
+    outline: none;
+    color: #afb5c5;
+    width: 80%;
+    padding: 12px 25px;
+    border-radius: 5px;
+    font-size: 15px
+}
+.msg-text-input::placeholder{
+    color: #afb5c5;
+}
+.msg-input-form svg{
+    font-size: 20px;
+    cursor: pointer;
+}
+.file-input{
+    display: none;
+}
+.msg-input-form button{
+    background-color: #5271ff;
+    border: none;
+    outline: none;
+    color: #e5d1fb;
+    padding: 12px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}

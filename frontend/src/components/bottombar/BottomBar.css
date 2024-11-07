@@ -1,0 +1,26 @@
+.bottombar{
+    display: flex;
+    align-items: center;
+    background-color: #36404a;
+    height: 60px;
+    width: 100vw;
+}
+.bottombar-elements{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    width: 100%;
+}
+.bottombar-svg{
+    padding: 15px;
+    height: 20px;
+    width: 20px;
+    color: #a6b0cf;
+    cursor: pointer;
+}
+.bottombar-profile{
+    border-radius: 50rem;
+    height: 35px;
+    width: 35px;
+}

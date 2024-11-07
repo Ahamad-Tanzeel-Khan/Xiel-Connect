@@ -1,0 +1,11 @@
+.new-group-container{
+    background: url("/public/background/1.jpg")
+}
+
+.bg-vid { 
+    position: fixed; 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    z-index: 0;
+  }

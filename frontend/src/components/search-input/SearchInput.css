@@ -1,0 +1,26 @@
+.chat-search-form{
+    display: flex;
+    align-items: center;
+}
+.chat-search-btn{
+    border: none;
+    background-color: #36404a;
+    padding: 10px 5px 10px 15px;
+    border-radius: 3px 0px 0px 3px;
+    outline: none;
+}
+.chat-search-btn svg{
+    height: 1.4rem;
+    width: 1.4rem;
+    color: #a6b0cf;
+}
+
+.chat-search-form input{
+    border: none;
+    outline: none;
+    background-color: #36404a;
+    color: #a6b0cf;
+    padding: 15px;
+    border-radius: 0 3px 3px 0;
+    width: 100%;
+}
