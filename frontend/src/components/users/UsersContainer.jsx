@@ -1,14 +1,19 @@
 import React from 'react'
 import SearchInput from '../search-input/SearchInput';
-import AllUsers from './Users/users/Users';
+import Conversations from '../conversations/Conversations';
+import useGetAllUsers from '../../hooks/useGetAllUsers';
 
 const UsersContainer= () => {
-    console.log("Users");
+  const { loading, users } = useGetAllUsers();
+
+  console.log(users);
+  
+
   return (
     <div className='chats-conatiner'>
       <div className="chats-title">All Users</div>
       <SearchInput />
-      <AllUsers />
+      <Conversations conversations={users} loading={loading}/>
     </div>
   )
 }

@@ -8,15 +8,17 @@ import { TbLogout2 } from "react-icons/tb";
 import useLogout from '../../hooks/useLogout';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAuthContext } from '../../context/AuthContext';
+import { useSelectedElement } from '../../context/SelectedElement';
 
-const BottomBar = ({ onSelect }) => {
+const BottomBar = () => {
   const { loading, logout } = useLogout();
   const [selected, setSelected] = useState('chat');
   const {authUser} = useAuthContext();
+  const { setSelectedElement } = useSelectedElement();
 
   const handleIconClick = (icon) => {
     setSelected(icon);
-    onSelect(icon);
+    setSelectedElement(icon);
   };
 
   return (

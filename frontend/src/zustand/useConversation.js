@@ -1,65 +1,106 @@
 import { create } from "zustand";
 
+// Helper function to load unread counts from localStorage           
+const loadUnreadCounts = () => {
+  const storedCounts = localStorage.getItem("unreadCounts");
+  return storedCounts ? JSON.parse(storedCounts) : {};
+};
+
+// Helper function to save unread counts to localStorage
+const saveUnreadCounts = (unreadCounts) => {
+  localStorage.setItem("unreadCounts", JSON.stringify(unreadCounts));
+};
+
 const useConversation = create((set) => ({
-    selectedConversation: null,
-    conversations: [],
-    setConversations: (conversations) => set({ conversations }),
-    messages: [],
-    setMessages: (messages) => set({ messages }),
-    unreadCounts: {},
-    favoriteConversations: [], 
-    setFavoriteConversations: (favorites) => set({ favoriteConversations: favorites }),
+  selectedConversation: null,
+  conversations: [],
+  setConversations: (conversations) => set({ conversations: Array.isArray(conversations) ? conversations : [] }),
+  channels: [],
+  setChannels: (channels) => set({ channels }),
+  messages: [],
+  setMessages: (messages) => set({ messages }),
+  unreadCounts: loadUnreadCounts(), // Load initial unreadCounts from localStorage
+  favoriteConversations: [], // Initialize as an empty array
+  setFavoriteConversations: (favorites) => set({ favoriteConversations: favorites }),
 
-    setSelectedConversation: (conversation) =>
-        set((state) => {
-            const updatedUnreadCounts = { ...state.unreadCounts };
-            if (conversation) {
-                updatedUnreadCounts[conversation._id] = 0;
-            }
-            return { selectedConversation: conversation, unreadCounts: updatedUnreadCounts };
-        }),
+  setSelectedConversation: (chat, selectedElement) => set((state) => {
+    if (!chat) return { selectedConversation: null };
 
-    incrementUnreadCount: (conversationId) =>
-        set((state) => {
-            const updatedUnreadCounts = { ...state.unreadCounts };
-            updatedUnreadCounts[conversationId] = (updatedUnreadCounts[conversationId] || 0) + 1;
-            return { unreadCounts: updatedUnreadCounts };
-        }),
+    const updatedUnreadCounts = { ...state.unreadCounts };
 
-    clearUnreadCount: (conversationId) =>
-        set((state) => {
-            const updatedUnreadCounts = { ...state.unreadCounts };
-            updatedUnreadCounts[conversationId] = 0;
-            return { unreadCounts: updatedUnreadCounts };
-        }),
+    // Ensure unread messages are only marked read if in the correct section
+    const isChannel = chat.isChannel || false;
+    if ((selectedElement === 'chat' && !isChannel) || (selectedElement === 'channels' && isChannel)) {
+      updatedUnreadCounts[chat._id] = 0; // Reset unread count
+    }
 
-    toggleFavoriteConversation: (conversationId) => set((state) => {
-        const isFavorite = state.favoriteConversations.includes(conversationId);
-        const updatedFavorites = isFavorite
-            ? state.favoriteConversations.filter(id => id !== conversationId)
-            : [...state.favoriteConversations, conversationId];
-        
-        return { favoriteConversations: updatedFavorites };
+    return { selectedConversation: chat, unreadCounts: updatedUnreadCounts };
+  }),
+
+  incrementUnreadCount: (conversationId, messageId) =>
+    set((state) => {
+      const { selectedConversation, unreadCounts, lastIncrementedMessage } = state;
+  
+      // If the conversation is open, do nothing
+      if (selectedConversation && selectedConversation._id === conversationId) {
+        return {}; // No change needed
+      }
+  
+      const updatedUnreadCounts = { ...unreadCounts };
+  
+      // Prevent incrementing multiple times for the same message
+      if (lastIncrementedMessage !== messageId) {
+        updatedUnreadCounts[conversationId] = (updatedUnreadCounts[conversationId] || 0) + 1;
+  
+        // Save updated unread counts to localStorage
+        saveUnreadCounts(updatedUnreadCounts);
+  
+        return { unreadCounts: updatedUnreadCounts, lastIncrementedMessage: messageId };
+      }
+  
+      return {}; // No update if the message was already counted
+    }),
+  
+
+  clearUnreadCount: (conversationId) =>
+    set((state) => {
+      const updatedUnreadCounts = { ...state.unreadCounts };
+      updatedUnreadCounts[conversationId] = 0;
+
+      // Save updated unread counts to localStorage
+      saveUnreadCounts(updatedUnreadCounts);
+
+      return { unreadCounts: updatedUnreadCounts };
     }),
 
-    updateConversationLastMessage: (newMessage) =>
-        set((state) => {
-            const updatedConversations = state.conversations
-                .map((conversation) =>
-                    conversation._id === newMessage.chatRoom
-                        ? {
-                              ...conversation,
-                              lastMessage: {
-                                  text: newMessage.message,
-                                  timestamp: new Date(),
-                              },
-                          }
-                        : conversation
-                )
-                .sort((a, b) => new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp));
+  toggleFavoriteConversation: (conversationId) => set((state) => {
+    const favoriteConversations = state.favoriteConversations || []; // Ensure it's an array
+    const isFavorite = favoriteConversations.includes(conversationId);
+    const updatedFavorites = isFavorite
+      ? favoriteConversations.filter(id => id !== conversationId)
+      : [...favoriteConversations, conversationId];
+    
+    return { favoriteConversations: updatedFavorites };
+  }),
 
-            return { conversations: updatedConversations };
-        }),
+  updateConversationLastMessage: (newMessage) =>
+    set((state) => {
+      const updatedConversations = state.conversations
+        .map((conversation) =>
+          conversation._id === newMessage.chatRoom
+            ? {
+                ...conversation,
+                lastMessage: {
+                  text: newMessage.message,
+                  timestamp: new Date(),
+                },
+              }
+            : conversation
+        )
+        .sort((a, b) => new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp));
+
+      return { conversations: updatedConversations };
+    }),
 }));
 
 export default useConversation;

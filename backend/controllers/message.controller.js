@@ -1,92 +1,130 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import { getReceiverSocketId, getSenderSocketId, io } from "../socket/socket.js";
+import Channel from "../models/channel.model.js";
+
 
 export const sendMessage = async (req, res) => {
     try {
-        const { message, mediaUrl, mediaType, originalFileName } = req.body; 
+        const { message, mediaUrl, mediaType, originalFileName, chatRoomType } = req.body;
         const senderId = req.user._id;
         const { conversationId } = req.params;
 
-        let conversation = await Conversation.findOne({
-            participants: {$all: [senderId, conversationId]}
-        })
+        let chatRoom;
+        let NewlyCreatedConversation = false;
+        
+        if (chatRoomType === "channel") {
+            chatRoom = await Channel.findOne({ _id: conversationId });
+            
+        } else {
+            chatRoom = await Conversation.findOne({
+                participants: { $all: [senderId, conversationId], $size: 2 }
+            });
 
-        if (!conversation) {
-            conversation = await Conversation.create({
-                participants: [senderId, conversationId],
-            })
+            if (!chatRoom) {
+                chatRoom = await Conversation.create({
+                    participants: [senderId, conversationId]
+                });
+
+                NewlyCreatedConversation = true;
+            }
         }
 
         const newMessage = new Message({
             senderId,
-            recieverId: conversation.isGroup ? null : conversationId,
-            chatRoom: conversation._id, 
+            receiverId: conversationId,
+            chatRoomType: chatRoomType,
+            chatRoom: chatRoom._id,
             message,
             originalFileName,
-            mediaUrl, 
+            mediaUrl,
             mediaType,
         });
 
-        conversation.lastMessage = {
+        chatRoom.lastMessage = {
             text: mediaType ? mediaType : message.substring(0, 17),
             type: mediaType ? mediaType : "text",
             timestamp: new Date(),
         };
-        
 
+        chatRoom.messages.push(newMessage._id);
+        await Promise.all([chatRoom.save(), newMessage.save()]);
 
-        conversation.messages.push(newMessage._id);
+        if (NewlyCreatedConversation) {
+            chatRoom = await chatRoom.populate('participants', 'username profilePic');
 
-        await Promise.all([conversation.save(), newMessage.save()]);
+            const receiverSocketId = getReceiverSocketId(conversationId);
+            // const senderSocketId = getSenderSocketId(senderId);
+            // if (senderSocketId) io.to(senderSocketId).emit("newConversation", chatRoom);
+            if (receiverSocketId) io.to(receiverSocketId).emit("newConversation", chatRoom);
+        }        
 
-        const receiverSocketId = getReceiverSocketId(conversationId);
-        const senderSocketId = getSenderSocketId(senderId);
+        // 🔹 Broadcast to all channel members
+        if (chatRoomType === "channel") {
+            chatRoom.participants.forEach((participantId) => {
+                const socketId = getReceiverSocketId(participantId.toString());
+                if (socketId) {
+                    io.to(socketId).emit("newMessage", newMessage);
+                    io.to(socketId).emit("conversationUpdate", {
+                        conversationId: chatRoom._id,
+                        lastMessage: chatRoom.lastMessage,
+                        chatRoomType,
+                    });
+                }
+            });
+        } 
+        else {
+            // 🔹 Normal private chat message sending
+            const receiverSocketId = getReceiverSocketId(conversationId);
+            const senderSocketId = getSenderSocketId(senderId);
 
-        if(receiverSocketId){
-            io.to(receiverSocketId).emit("newMessage", newMessage)
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("newMessage", newMessage);
+            }
+
+            io.to([senderSocketId, receiverSocketId]).emit("conversationUpdate", {
+                conversationId: chatRoom._id,
+                lastMessage: chatRoom.lastMessage,
+            });
         }
 
-        io.to([senderSocketId, receiverSocketId]).emit("conversationUpdate", {
-            conversationId: conversation._id,
-            lastMessage: conversation.lastMessage,
-        });
-
-
         res.status(201).json(newMessage);
-
     } catch (error) {
         console.log("Error in sendMessage controller", error.message);
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
+
 export const getMessages = async (req, res) => {
     try {
-        const { id: userOrGroupId } = req.params;
+        const { id: chatRoomId } = req.params;
         const senderId = req.user._id;
-        let conversation;
+        const isChannel = req.query.isChannel === 'true';
+        let chatRoom;
 
-        if (req.query.isGroup === 'true') {
-            conversation = await Conversation.findOne({
-                _id: userOrGroupId,
-                isGroup: true
+        if (isChannel) {
+            chatRoom = await Channel.findOne({
+                _id: chatRoomId,
+                participants: { $all: [senderId] }
             }).populate("messages");
+            
         } else {
-            conversation = await Conversation.findOne({
-                participants: { $all: [senderId, userOrGroupId] }
+            chatRoom = await Conversation.findOne({
+                _id: chatRoomId,
+                participants: { $all: [senderId] }
             }).populate("messages");
         }
 
-        if (!conversation) return res.status(200).json([]);
+        if (!chatRoom) return res.status(200).json([]);
 
-        const messages = conversation.messages;
-
-        res.status(200).json(messages);
+        res.status(200).json(chatRoom.messages);
     } catch (error) {
         console.log("Error in getMessages controller:", error.message);
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
 
 export const deleteMessage = async (req, res) => {
     try {
@@ -103,7 +141,14 @@ export const deleteMessage = async (req, res) => {
             { $pull: { messages: messageId } }
         );
 
-        io.emit("messageDeleted", messageId);
+        const conversation = await Conversation.findById(message.chatRoom);
+        if (conversation) {
+            conversation.participants.forEach(participantId => {
+                const socketId = getReceiverSocketId(participantId.toString());
+                if (socketId) io.to(socketId).emit("messageDeleted", messageId);
+            });
+        }
+
 
         res.status(200).json({ message: "Message deleted successfully" });
     } catch (error) {
@@ -130,8 +175,11 @@ export const deleteMessagesForUser = async (req, res) => {
 
         const messages = await Message.find({ chatRoom: chatRoomId });
         const messagesToDelete = messages.filter((message) => 
-            participants.every((participantId) => message.deletedFor.includes(participantId.toString()))
+            participants.every((participantId) => 
+                Array.isArray(message.deletedFor) && message.deletedFor.includes(participantId.toString())
+            )
         );
+        
 
         await Message.deleteMany({
             _id: { $in: messagesToDelete.map((msg) => msg._id) }
@@ -150,21 +198,27 @@ export const deleteMessagesForUser = async (req, res) => {
 
 export const markMessagesAsRead = async (req, res) => {
     try {
-        const { conversationId } = req.body;
-        const userId = req.user._id;
+        const { conversationId, isChannel } = req.body;
+        const userId = req.user._id
+        let chatRoom;
+        
+        if (isChannel) {
+            chatRoom = await Channel.findById(conversationId);
+        } else {
+            chatRoom = await Conversation.findById(conversationId);
+        }
 
-        // Update messages to add the userId to the readBy array
-        await Message.updateMany(
-            { chatRoom: conversationId, readBy: { $ne: userId } }, // Only update unread messages
-            { $addToSet: { readBy: userId } } // Use $addToSet to avoid duplicates
+        if (!chatRoom) {
+            return res.status(404).json({ error: 'Chat not found' });
+        }
+
+        const updatedMessages = await Message.updateMany(
+            { chatRoom: conversationId, readBy: { $ne: userId } },
+            { $push: { readBy: userId } }
         );
 
-        // Optionally emit an event to notify the frontend
-        io.emit("messagesRead", { conversationId, userId });
-
-        res.status(200).json({ message: "Messages marked as read" });
+        res.json({ success: true, updatedMessages });
     } catch (error) {
-        console.error("Error marking messages as read:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        res.status(500).json({ error: 'Error marking messages as read' });
     }
 };

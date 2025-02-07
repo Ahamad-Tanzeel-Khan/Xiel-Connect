@@ -5,6 +5,7 @@ import useConversation from "../zustand/useConversation";
 const useGetFavorites = () => {
     const [loading, setLoading] = useState(false);
     const { setFavoriteConversations } = useConversation();
+    const [users, setUsers] = useState([]);
 
     useEffect(() => {
         const getFavorites = async () => {
@@ -16,6 +17,7 @@ const useGetFavorites = () => {
                 if (data.error) {
                     throw new Error(data.error);
                 }
+                setUsers(data);
                 setFavoriteConversations(data.map((conv) => conv._id)); 
             } catch (error) {
                 toast.error(error.message);
@@ -27,7 +29,7 @@ const useGetFavorites = () => {
         getFavorites();
     }, [setFavoriteConversations]);
 
-    return { loading };
+    return { loading, users };
 };
 
 export default useGetFavorites;

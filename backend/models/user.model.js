@@ -30,7 +30,15 @@ const userSchema = new mongoose.Schema({
             ref: "Conversation",
             default: []
         }
-    ]
+    ],
+    channels: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Channel",
+            default: [],
+        }
+    ],    
+    
 }, {timestamps: true})
 
 const User = mongoose.model("User", userSchema);

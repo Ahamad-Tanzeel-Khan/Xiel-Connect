@@ -6,6 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthContextProvider } from './context/AuthContext';
 import { SocketContextProvider } from './context/SocketContext';
+import { SelectedElementProvider } from './context/SelectedElement';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -13,7 +14,9 @@ root.render(
     <BrowserRouter>
       <AuthContextProvider>
         <SocketContextProvider>
-          <App />
+          <SelectedElementProvider>
+            <App />
+          </SelectedElementProvider>
         </SocketContextProvider>
       </AuthContextProvider>
     </BrowserRouter>

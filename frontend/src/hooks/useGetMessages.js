@@ -6,32 +6,33 @@ import { useAuthContext } from "../context/AuthContext";
 const useGetMessages = () => {
     const [loading, setLoading] = useState(false);
     const { messages, setMessages, selectedConversation } = useConversation();
-    const { authUser } = useAuthContext(); 
+    const { authUser } = useAuthContext();
 
     useEffect(() => {
         const getMessages = async () => {
             setLoading(true);
             try {
-                let userOrGroupId;
-                let isGroup = selectedConversation.isGroup || false;
+                let userOrChannelId;
+                const isChannel = selectedConversation?.isChannel ? "true" : "false";
                 
-                if (isGroup) {
-                    userOrGroupId = selectedConversation._id;
+                if (isChannel) {
+                    userOrChannelId = selectedConversation._id;
                 } else {
-                    userOrGroupId = selectedConversation?.participants?.find(
+                    userOrChannelId = selectedConversation?.participants?.find(
                         (participant) => participant._id !== authUser._id
                     )._id;
 
-                    if (!userOrGroupId) {
-                        userOrGroupId = selectedConversation._id;
+                    if (!userOrChannelId) {
+                        userOrChannelId = selectedConversation._id;
                     }
                 }
 
-                const res = await fetch(`/api/messages/${userOrGroupId}?isGroup=${isGroup}`);
+
+                const res = await fetch(`/api/messages/${userOrChannelId}?isChannel=${isChannel}`);
                 const data = await res.json();
 
                 if (data.error) throw new Error(data.error);
-                setMessages(data);
+                setMessages(data); 
             } catch (error) {
                 toast.error(error.message);
             } finally {
@@ -42,8 +43,9 @@ const useGetMessages = () => {
         if (selectedConversation?._id) {
             getMessages();
         }
-    }, [selectedConversation?._id, setMessages, authUser._id, selectedConversation.isGroup, selectedConversation.participants]);
+    }, [selectedConversation?._id, setMessages, authUser._id, selectedConversation.isChannel, selectedConversation.participants]);
 
     return { messages, loading };
 };
+
 export default useGetMessages;

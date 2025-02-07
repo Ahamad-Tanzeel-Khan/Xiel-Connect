@@ -14,24 +14,35 @@ import useDeleteForUser from '../../../hooks/useDeleteMessagesForUser';
 import useAddToFavorites from '../../../hooks/useAddToFavorites';
 
 const MessagesContainer = () => {
-  const { selectedConversation, setSelectedConversation, favoriteConversations } = useConversation();
+  const { selectedConversation, setSelectedConversation, favoriteConversations, conversations } = useConversation();
   const { authUser } = useAuthContext();
   const [slidingOut, setSlidingOut] = useState(false);
 	const {onlineUsers} = useSocketContext();
   const {deleteForUser} = useDeleteForUser();
-  const {loading, addToFavorites} = useAddToFavorites();
+  const {addToFavorites} = useAddToFavorites();
 
   useEffect(() => {
     return () => setSelectedConversation(null);
   }, [setSelectedConversation]);
+  
+  const activeConversation = conversations?.find(conv => conv._id === selectedConversation?._id) || selectedConversation;
 
-  let otherParticipant = selectedConversation?.participants?.find(
+  let otherParticipant = activeConversation?.participants?.find(
     (participant) => participant._id !== authUser._id
   );
 
   if (!otherParticipant) {
-    otherParticipant = selectedConversation
+    otherParticipant = activeConversation
   }
+
+  let profilePic = otherParticipant?.profilePic;
+  let name = otherParticipant?.username;
+
+  if(activeConversation?.isChannel){
+    profilePic = activeConversation?.icon;
+    name = activeConversation?.name;
+  }
+
 
   const handleClick = () => {
     setSlidingOut(true);
@@ -43,17 +54,8 @@ const MessagesContainer = () => {
 
 	const isOnline = onlineUsers.includes(otherParticipant?._id);
 
-  let isFavorite = favoriteConversations.includes(selectedConversation?._id)
+  let isFavorite = favoriteConversations.includes(activeConversation?._id)
 
-  function toTitleCase(str) {
-    if (!str) return '';
-    return str.replace(
-      /\w\S*/g,
-      text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
-    );
-  }
-
-  
   const handleToggleFavorites = async(e) => {
     e.preventDefault();
     await addToFavorites();
@@ -65,14 +67,14 @@ const MessagesContainer = () => {
   }
 
   return (
-    <div className={`messages-container ${selectedConversation ? 'slide-in' : ''} ${slidingOut ? 'slide-out' : ''}`}>
-      {!selectedConversation ? <NoChatSelected /> : (
+    <div className={`messages-container ${activeConversation ? 'slide-in' : ''} ${slidingOut ? 'slide-out' : ''}`}>
+      {!activeConversation ? <NoChatSelected /> : (
         <>
           <div className='msg-container-header'>
             <div className='msg-profile'>
               <IoChevronBackOutline onClick={handleClick} />
-              <img src={otherParticipant.profilePic} alt="" />
-              <span> {toTitleCase(otherParticipant.username)}</span>
+              <img src={profilePic} alt="" />
+              <span> {name}</span>
               {isOnline && <div className='online'></div>}
             </div>
             <div className='chat-functions'>

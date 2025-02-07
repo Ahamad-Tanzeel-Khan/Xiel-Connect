@@ -27,6 +27,7 @@ const Message = ({ message }) => {
     const [menuVisible, setMenuVisible] = useState(false);
     const menuRef = useRef(null);
 
+    
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -45,23 +46,12 @@ const Message = ({ message }) => {
         setMenuVisible(!menuVisible);
     };
 
-    function toTitleCase(str) {
-        if (!str) return '';
-        return str.replace(
-            /\w\S*/g,
-            text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
-        );
-    }
-
-    let otherParticipant = selectedConversation.participants?.find(
-        (participant) => participant._id !== authUser._id
+    let sender = selectedConversation.participants?.find(
+        (participant) => participant._id === message.senderId
     );
 
-    if (!otherParticipant) {
-        otherParticipant = selectedConversation;
-    }
 
-    const profilePic = fromMe ? authUser.profilePic : otherParticipant?.profilePic;
+    const profilePic = fromMe ? authUser.profilePic : sender?.profilePic;
 
     const handleCopyClick = async () => {
         try {
@@ -134,9 +124,9 @@ const Message = ({ message }) => {
                 </div>
 
                 <div className='msg-usr-img' style={chatPosition}>
-                    <span style={displayAuthUser}>{toTitleCase(authUser.username)}</span>
+                    <span style={displayAuthUser}>{authUser.username}</span>
                     <img alt='bubble' src={profilePic} />
-                    <span style={displayUser}>{toTitleCase(otherParticipant?.username)}</span>
+                    <span style={displayUser}>{sender?.username}</span>
                 </div>
             </div>
         </div>

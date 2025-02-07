@@ -1,32 +1,32 @@
 import React from 'react';
 import "./Conversation.css";
-import useConversation from '../../../zustand/useConversation';
-import { useAuthContext } from '../../../context/AuthContext';
-import { useSocketContext } from '../../../context/SocketContext';
-import useMarkAsRead from '../../../hooks/useMarkAsRead';
+import { useAuthContext } from '../../context/AuthContext';
+import { useSocketContext } from '../../context/SocketContext';
+import useMarkAsRead from '../../hooks/useMarkAsRead';
+import useConversation from '../../zustand/useConversation';
 
 const Conversation = ({ conversation }) => {
     const { selectedConversation, setSelectedConversation, unreadCounts } = useConversation();
     const { authUser } = useAuthContext();
-    const { markAsRead } = useMarkAsRead(); // Get the function to mark messages as read
+    const { markAsRead } = useMarkAsRead();
 
     const isSelected = selectedConversation?._id === conversation._id;
     const selectedColor = isSelected ? "#3e4a56" : "";
-
+    
     const otherParticipant = conversation.participants.find(
         (participant) => participant._id !== authUser._id
     );
 
+    let profilePic = otherParticipant?.profilePic;
+    let name = otherParticipant?.username;
+
+    if(conversation?.name){
+        profilePic = conversation?.icon;
+        name = conversation?.name;
+    }
+
     const { onlineUsers } = useSocketContext();
     const isOnline = onlineUsers.includes(otherParticipant?._id);
-
-    function toTitleCase(str) {
-        if (!str) return '';
-        return str.replace(
-            /\w\S*/g,
-            text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
-        );
-    }
 
     const lastMsgTime = new Date(conversation.lastMessage.timestamp).toLocaleTimeString(navigator.language, {
         hour: '2-digit',
@@ -45,21 +45,19 @@ const Conversation = ({ conversation }) => {
         }
         setSelectedConversation(conversation);
         if (unreadCounts[conversation._id] > 0) {
-            markAsRead(conversation._id); 
+            markAsRead(conversation._id, conversation.isChannel); 
         }
     };
-    
-    
 
     return (
         <div className='conversation-tile-container' style={{ backgroundColor: selectedColor }} onClick={handleConversationClick}>
             <div className='conversation-tile-content'>
                 <div className='conversation-tile-img'>
-                    <img src={otherParticipant?.profilePic} alt="profile" />
+                    <img src={profilePic} alt="profile" />
                     {isOnline && <div className='isOnline'></div>}
                 </div>
                 <div>
-                    <div>{toTitleCase(otherParticipant?.username)}</div>
+                    <div>{name}</div>
                     <div className='conversation-tile-last-msg'>{lastMessage}</div>
                 </div>
             </div>
@@ -73,4 +71,4 @@ const Conversation = ({ conversation }) => {
     );
 }
 
-export default Conversation;
+export default React.memo(Conversation);

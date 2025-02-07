@@ -9,6 +9,7 @@ import usersRoutes from "./routes/users.routes.js";
 import favoriteRoutes from "./routes/favorite.routes.js";
 import uploadRoutes from "./routes/upload.route.js";
 import conversationsRoutes from "./routes/conversations.routes.js";
+import channelRoutes from "./routes/channel.routes.js";
 import { app, server } from "./socket/socket.js";
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/conversations', conversationsRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/channel', channelRoutes);
 
 server.listen(PORT, () => {
     connectToMongoDB();

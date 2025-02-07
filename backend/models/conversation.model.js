@@ -19,14 +19,10 @@ const conversationSchema = new mongoose.Schema({
         type: { type: String, default: "text" }, // e.g., "text", "image", "file", "audio"
         timestamp: { type: Date, default: Date.now }
     },
-    isGroup: {
+    isChannel : {
         type: Boolean,
-        default: false 
-    },
-    groupName: {
-        type: String,
-        default: '' 
-    },
+        default: false,
+    }
 }, {timestamps: true});
 
 const Conversation = mongoose.model("Conversation", conversationSchema);

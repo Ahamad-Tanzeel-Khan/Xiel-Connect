@@ -38,18 +38,39 @@ const useSendMessage = () => {
                 throw new Error("No selected conversation.");
             }
 
-            const receiverId = selectedConversation?.participants?.find(
-                participant => participant._id !== authUser._id
-            )?._id || selectedConversation._id; 
+            let chatRoomType;
+            let userOrChannelId;
 
-            const messageRes = await fetch(`/api/messages/send/${receiverId}`, {
+            if (selectedConversation.isChannel) {
+
+                userOrChannelId = selectedConversation._id
+                chatRoomType = "channel"
+
+            } else {
+
+                userOrChannelId = selectedConversation?.participants?.find(
+                    participant => participant._id !== authUser._id
+                )?._id || selectedConversation._id;
+
+                chatRoomType = "conversation"
+            }
+
+
+
+            if (!userOrChannelId) {
+                userOrChannelId = selectedConversation._id
+                chatRoomType = "channel"
+            }
+            
+            const messageRes = await fetch(`/api/messages/send/${userOrChannelId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     message,
                     mediaUrl,
                     mediaType,
-                    originalFileName
+                    originalFileName,
+                    chatRoomType
                 }),
             });
 
@@ -61,6 +82,7 @@ const useSendMessage = () => {
             setMessages([...messages, messageData]);
 
             updateConversationLastMessage(messageData);
+            
 
         } catch (error) {
             toast.error(error.message);

@@ -2,21 +2,24 @@ import React, { useState } from 'react'
 import "./Sidebar.css"
 import { PiChatTeardropDotsBold } from "react-icons/pi";
 import { RiGroupLine } from "react-icons/ri";
-import { RiContactsLine } from "react-icons/ri";
 import { FaRegStar } from "react-icons/fa6";
 import { TbLogout2 } from "react-icons/tb";
 import useLogout from '../../hooks/useLogout';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAuthContext } from '../../context/AuthContext';
+import { BsGlobe2 } from "react-icons/bs";
+import { useSelectedElement } from '../../context/SelectedElement';
 
-const Sidebar = ({ onSelect }) => {
+
+const Sidebar = () => {
   const { loading, logout } = useLogout();
   const [selected, setSelected] = useState('chat');
+  const { setSelectedElement } = useSelectedElement();
   const {authUser} = useAuthContext();
 
   const handleIconClick = (icon) => {
     setSelected(icon);
-    onSelect(icon);
+    setSelectedElement(icon)
   };
 
   return (
@@ -36,15 +39,15 @@ const Sidebar = ({ onSelect }) => {
           }}
         />
         <RiGroupLine
-          onClick={() => handleIconClick('groups')}
+          onClick={() => handleIconClick('channels')}
           className='svg'
           style={{
-            backgroundColor: selected === 'groups' ? "#3e4a56" : 'transparent',
+            backgroundColor: selected === 'channels' ? "#3e4a56" : 'transparent',
             borderRadius: "10px",
-            color: selected === 'groups' ? "#5271ff" : '#a4aecd'
+            color: selected === 'channels' ? "#5271ff" : '#a4aecd'
           }}
         />
-        <RiContactsLine
+        <BsGlobe2
           onClick={() => handleIconClick('users')}
           className='svg'
           style={{

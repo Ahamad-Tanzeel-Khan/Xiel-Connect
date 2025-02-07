@@ -6,15 +6,20 @@ const messageSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
-    recieverId: {
+    receiverId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: function() { return this.chatRoomType === 'Conversation'; }
     },
     chatRoom: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Conversation",
-        required: true
+        refPath: "chatRoomType",
+        required: true,
+    },
+    chatRoomType: {
+        type: String,
+        enum: ["conversation", "channel"], 
+        required: true,
     },
     message: {
         type: String,
@@ -30,16 +35,19 @@ const messageSchema = new mongoose.Schema({
     },
     mediaType: {
         type: String, 
-        enum: ['image', 'video', 'audio', 'application',''],
+        enum: ['image', 'video', 'audio', 'application', ''],
         default: ''
     },
-    deletedFor: {
-        type: [String], 
-        default: []
+    type: {
+        type: String,
+        enum: ['text', 'system', 'file', 'image'],
+        default: 'text',
     },
+    deletedFor: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+}, { timestamps: true });
 
-}, {timestamps: true});
+messageSchema.index({ chatRoom: 1, chatRoomType: 1 });
 
 const Message = mongoose.model('Message', messageSchema);
 export default Message;
