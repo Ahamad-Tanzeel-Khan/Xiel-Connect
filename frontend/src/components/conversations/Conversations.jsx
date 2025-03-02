@@ -15,8 +15,12 @@ const Conversations = ({ conversations, loading }) => {
     console.log("Conversations updated:", conversations);
   }, [conversations]);
 
+  const isChannel = conversations[0]?.isChannel;
+
+  const height = isChannel ? { height: "70vh" } : { height: "78vh" };
+
   return (
-    <div className='conversations-container'>
+    <div className='conversations-container' style={height}>
       {loading ? (
         <div className='conversations-tiles' style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
           <CircularProgress color="inherit" size="40px" />

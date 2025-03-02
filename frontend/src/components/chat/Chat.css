@@ -8,20 +8,6 @@
     color: #eff2f7;
     font-size: 23px;
 }
-.unread-line {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    background-color: #e0e0e0; /* Light gray or any preferred color */
-    color: #333; /* Text color */
-    font-weight: bold;
-    font-size: 0.9em;
-    border-radius: 4px;
-    margin-bottom: 10px; /* Spacing below the line */
-    text-align: center;
-}
-
 
 @media only screen and (max-width: 990px) {
     .chats-conatiner{

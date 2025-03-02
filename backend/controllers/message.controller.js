@@ -12,10 +12,10 @@ export const sendMessage = async (req, res) => {
 
         let chatRoom;
         let NewlyCreatedConversation = false;
-        
+
         if (chatRoomType === "channel") {
             chatRoom = await Channel.findOne({ _id: conversationId });
-            
+
         } else {
             chatRoom = await Conversation.findOne({
                 participants: { $all: [senderId, conversationId], $size: 2 }
@@ -42,6 +42,7 @@ export const sendMessage = async (req, res) => {
         });
 
         chatRoom.lastMessage = {
+            _id: newMessage._id,
             text: mediaType ? mediaType : message.substring(0, 17),
             type: mediaType ? mediaType : "text",
             timestamp: new Date(),
@@ -57,9 +58,9 @@ export const sendMessage = async (req, res) => {
             // const senderSocketId = getSenderSocketId(senderId);
             // if (senderSocketId) io.to(senderSocketId).emit("newConversation", chatRoom);
             if (receiverSocketId) io.to(receiverSocketId).emit("newConversation", chatRoom);
-        }        
+        }
 
-        // 🔹 Broadcast to all channel members
+        // Broadcast to all channel members
         if (chatRoomType === "channel") {
             chatRoom.participants.forEach((participantId) => {
                 const socketId = getReceiverSocketId(participantId.toString());
@@ -72,9 +73,9 @@ export const sendMessage = async (req, res) => {
                     });
                 }
             });
-        } 
+        }
         else {
-            // 🔹 Normal private chat message sending
+            //  Normal private chat message sending
             const receiverSocketId = getReceiverSocketId(conversationId);
             const senderSocketId = getSenderSocketId(senderId);
 
@@ -108,7 +109,7 @@ export const getMessages = async (req, res) => {
                 _id: chatRoomId,
                 participants: { $all: [senderId] }
             }).populate("messages");
-            
+
         } else {
             chatRoom = await Conversation.findOne({
                 _id: chatRoomId,
@@ -128,41 +129,110 @@ export const getMessages = async (req, res) => {
 
 export const deleteMessage = async (req, res) => {
     try {
-        const { messageId } = req.params;
-
-        const message = await Message.findByIdAndDelete(messageId);
-
-        if (!message) {
-            return res.status(404).json({ error: "Message not found", params: messageId });
-        }
-
-        await Conversation.updateOne(
-            { _id: message.chatRoom },
-            { $pull: { messages: messageId } }
+      const { messageId } = req.params;
+  
+      const message = await Message.findByIdAndDelete(messageId);
+      if (!message) {
+        return res.status(404).json({ error: "Message not found", params: messageId });
+      }
+  
+      if (message.chatRoomType === 'channel') {
+        await Channel.updateOne(
+          { _id: message.chatRoom },
+          { $pull: { messages: messageId } }
         );
-
-        const conversation = await Conversation.findById(message.chatRoom);
-        if (conversation) {
-            conversation.participants.forEach(participantId => {
-                const socketId = getReceiverSocketId(participantId.toString());
-                if (socketId) io.to(socketId).emit("messageDeleted", messageId);
+  
+        const channel = await Channel.findById(message.chatRoom).populate("messages");
+  
+        if (channel) {
+          channel.participants.forEach((participantId) => {
+            const socketId = getReceiverSocketId(participantId.toString());
+            if (socketId) {
+              io.to(socketId).emit("messageDeleted", messageId);
+            }
+          });
+  
+          if (channel.lastMessage && channel.lastMessage._id && channel.lastMessage._id.toString() === messageId.toString()) {
+            const newLastMessageDoc = await Message.findOne({ chatRoom: channel._id }).sort({ createdAt: -1 });
+            channel.lastMessage = newLastMessageDoc ? {
+              _id: newLastMessageDoc._id,
+              text: newLastMessageDoc.message,
+              type: newLastMessageDoc.mediaType || "text",
+              timestamp: newLastMessageDoc.createdAt,
+            } : {};
+            await channel.save();
+            channel.participants.forEach((participantId) => {
+              const socketId = getReceiverSocketId(participantId.toString());
+              if (socketId) {
+                io.to(socketId).emit("conversationUpdate", {
+                  conversationId: channel._id,
+                  lastMessage: channel.lastMessage,
+                  chatRoomType: "channel"
+                });
+              }
             });
+          }
         }
-
-
-        res.status(200).json({ message: "Message deleted successfully" });
+      } else {
+        await Conversation.updateOne(
+          { _id: message.chatRoom },
+          { $pull: { messages: messageId } }
+        );
+  
+        const conversation = await Conversation.findById(message.chatRoom).populate("messages");
+        if (conversation) {
+          conversation.participants.forEach((participantId) => {
+            const socketId = getReceiverSocketId(participantId.toString());
+            if (socketId) {
+              io.to(socketId).emit("messageDeleted", messageId);
+            }
+          });
+  
+          if (conversation.lastMessage && conversation.lastMessage._id && conversation.lastMessage._id.toString() === messageId.toString()) {
+            const newLastMessageDoc = await Message.findOne({ chatRoom: conversation._id }).sort({ createdAt: -1 });
+            conversation.lastMessage = newLastMessageDoc ? {
+              _id: newLastMessageDoc._id,
+              text: newLastMessageDoc.message,
+              type: newLastMessageDoc.mediaType || "text",
+              timestamp: newLastMessageDoc.createdAt,
+            } : {};
+            await conversation.save();
+            conversation.participants.forEach((participantId) => {
+              const socketId = getReceiverSocketId(participantId.toString());
+              if (socketId) {
+                io.to(socketId).emit("conversationUpdate", {
+                  conversationId: conversation._id,
+                  lastMessage: conversation.lastMessage,
+                });
+              }
+            });
+          }
+        }
+      }
+  
+      res.status(200).json({ message: "Message deleted successfully" });
     } catch (error) {
-        console.error("Error in deleteMessage controller:", error.message);
-        res.status(500).json({ error: "Internal Server Error" });
+      console.error("Error in deleteMessage controller:", error.message);
+      res.status(500).json({ error: "Internal Server Error" });
     }
-};
+  };
+  
+
 
 export const deleteMessagesForUser = async (req, res) => {
     try {
         const { chatRoomId } = req.params;
-        const userId = req.user.id;  
-        
-        const conversation = await Conversation.findById(chatRoomId);
+        const userId = req.user.id;
+        const isChannel = req.query.isChannel === 'true';
+
+        let conversation;
+
+        if (isChannel) {
+            conversation = await Channel.findById(chatRoomId);
+        } else {
+            conversation = await Conversation.findById(chatRoomId);
+        }
+
         if (!conversation) {
             return res.status(404).json({ error: "Conversation not found" });
         }
@@ -174,20 +244,20 @@ export const deleteMessagesForUser = async (req, res) => {
         );
 
         const messages = await Message.find({ chatRoom: chatRoomId });
-        const messagesToDelete = messages.filter((message) => 
-            participants.every((participantId) => 
+        const messagesToDelete = messages.filter((message) =>
+            participants.every((participantId) =>
                 Array.isArray(message.deletedFor) && message.deletedFor.includes(participantId.toString())
             )
         );
-        
+
 
         await Message.deleteMany({
             _id: { $in: messagesToDelete.map((msg) => msg._id) }
         });
 
-        res.status(200).json({ 
-            message: "Messages updated for user", 
-            deletedMessages: messagesToDelete.map((msg) => msg._id)  // Return IDs instead
+        res.status(200).json({
+            message: "Messages updated for user",
+            deletedMessages: messagesToDelete.map((msg) => msg._id)
         });
     } catch (error) {
         console.error("Error in deleteMessagesForUser:", error.message);
@@ -201,7 +271,7 @@ export const markMessagesAsRead = async (req, res) => {
         const { conversationId, isChannel } = req.body;
         const userId = req.user._id
         let chatRoom;
-        
+
         if (isChannel) {
             chatRoom = await Channel.findById(conversationId);
         } else {

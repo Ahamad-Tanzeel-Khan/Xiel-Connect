@@ -7,9 +7,13 @@ const useDeleteForUser = () => {
     const { setMessages, selectedConversation} = useConversation();
 
     const deleteForUser = async () => {
+
         setLoading(true);
+
+        const isChannel = selectedConversation?.isChannel ? "true" : "false";
+        
         try {
-            const res = await fetch(`/api/messages/delete-for-user/${selectedConversation._id}`, {
+            const res = await fetch(`/api/messages/delete-for-user/${selectedConversation._id}?isChannel=${isChannel}`, {
                 method: "POST",
             });
     

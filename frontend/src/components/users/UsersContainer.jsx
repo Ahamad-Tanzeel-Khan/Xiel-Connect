@@ -12,7 +12,7 @@ const UsersContainer= () => {
   return (
     <div className='chats-conatiner'>
       <div className="chats-title">All Users</div>
-      <SearchInput />
+      <SearchInput conversations={users}/>
       <Conversations conversations={users} loading={loading}/>
     </div>
   )

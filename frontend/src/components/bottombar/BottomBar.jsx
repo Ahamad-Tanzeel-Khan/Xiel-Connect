@@ -34,12 +34,12 @@ const BottomBar = () => {
           }}
         />
         <RiGroupLine
-          onClick={() => handleIconClick('groups')}
+          onClick={() => handleIconClick('channels')}
           className='bottombar-svg'
           style={{
-            backgroundColor: selected === 'groups' ? "#3e4a56" : 'transparent',
+            backgroundColor: selected === 'channels' ? "#3e4a56" : 'transparent',
             borderRadius: "10px",
-            color: selected === 'groups' ? "#5271ff" : '#a4aecd'
+            color: selected === 'channels' ? "#5271ff" : '#a4aecd'
           }}
         />
         <RiContactsLine

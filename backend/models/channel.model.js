@@ -20,7 +20,6 @@ const channelSchema = new mongoose.Schema({
     },
     inviteLink: {
         type: String,
-        // required: true,
         unique: true, 
     },
     admin: [
@@ -43,6 +42,10 @@ const channelSchema = new mongoose.Schema({
         }
     ],
     lastMessage: {
+        _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Message",
+        },
         text: { type: String, default: "" },
         type: { type: String, default: "text" }, // e.g., "text", "image", "file", "audio"
         timestamp: { type: Date, default: Date.now }

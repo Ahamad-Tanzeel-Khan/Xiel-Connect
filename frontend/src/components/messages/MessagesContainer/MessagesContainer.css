@@ -2,6 +2,7 @@
     background-color: #262e35;
     height: 100vh;
     position: relative;
+    width: 100%;
 }
 .msg-container-header{
     display: flex;
@@ -19,7 +20,8 @@
 }
 .msg-profile img{
     height: 40px;
-    width: 37px;
+    width: 40px;
+    border-radius: 50px;
 }
 .online{
     height: 10px;
@@ -69,6 +71,51 @@
     align-items: center;
     font-size: 40px;
 }
+.messages-container-wrapper {
+    position: relative;
+    display: flex;
+}
+.info-panel {
+    width: 400px;
+    height: 100vh;  
+    transition: transform 0.4s ease;
+    position: fixed;
+    top: 0;
+    right: 0;               
+    z-index: 10;
+    border-left: 3px solid #36404a;
+}
+.info-panel.hidden {
+    transform: translateX(100%);
+}
+.info-panel.visible {
+    transform: translateX(0);
+}
+
+.info-panel.slide-out {
+    transform: translateX(100%);
+}
+.info-background{
+    position: absolute;
+    background-color: #000;
+    opacity: 0.5;
+    height: 100%;
+    width: 100%;
+    z-index: 9;
+}
+.info-panel-btn svg{
+    padding: 20px;
+    font-size: 25px;
+    color: #9fb4d2;
+    border: none;
+    outline: none;
+    cursor: pointer;
+}
+.info-panel-btn {
+    display: flex;
+    justify-content: end;
+    width: 100%;
+}
 
 @media only screen and (max-width: 990px) {
     .msg-profile svg{
@@ -86,17 +133,12 @@
         top: 0;
         z-index: 10;
     }
-    
     .messages-container.slide-in {
         transform: translateX(-100%);
     }
-    
     .messages-container.slide-out {
         transform: translateX(0);
     }
-}
-
-@media only screen and (max-width: 990px) {
     .msgs-main-container{
         height: 83vh;
         display: flex;
@@ -104,6 +146,13 @@
     }
     .chat-functions{
         margin-top: 0px;
+    }
+    .info-background{
+        position: fixed;
+        z-index: 12;
+    }
+    .info-panel{
+        z-index: 15;
     }
 }
 @media only screen and (max-width: 480px) {
@@ -113,5 +162,8 @@
     .chat-functions{
         margin-top: 0;
         gap: 20px;
+    }
+    .info-panel{
+        width: 100%;
     }
 }

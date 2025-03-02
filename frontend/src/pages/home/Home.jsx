@@ -9,6 +9,7 @@ import UsersContainer from '../../components/users/UsersContainer';
 import Channels from '../../components/channels/Channels';
 import useListenMessages from '../../hooks/useListenMessages';
 import { useSelectedElement } from '../../context/SelectedElement';
+import CreateChannel from '../../components/channels/CreateChannel/CreateChannel';
 
 const Home = () => {
   const { selectedElement } = useSelectedElement();
@@ -35,6 +36,7 @@ const Home = () => {
       <div className="element-section">{renderElement()}</div>
       <div className="ongoing-conversation"> <MessagesContainer /> </div>
       <div className='bottombar-container'><BottomBar /></div>
+      <div style={{position: 'absolute'}}><CreateChannel /></div>
     </div>
   )
 }

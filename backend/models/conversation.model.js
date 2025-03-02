@@ -15,8 +15,13 @@ const conversationSchema = new mongoose.Schema({
         }
     ],
     lastMessage: {
+        _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Message",
+        },
+
         text: { type: String, default: "" },
-        type: { type: String, default: "text" }, // e.g., "text", "image", "file", "audio"
+        type: { type: String, default: "text" },
         timestamp: { type: Date, default: Date.now }
     },
     isChannel : {

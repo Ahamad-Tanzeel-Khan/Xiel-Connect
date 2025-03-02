@@ -66,7 +66,7 @@ const Login = () => {
                 </div>
 
                 <div className='login-right-container'>
-                    <img src="/background/p1.jpg" alt=""/>
+                    <img src="/background/login-picture.jpg" alt=""/>
                 </div>
             </div>
         </div>

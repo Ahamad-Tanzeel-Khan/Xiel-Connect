@@ -1,0 +1,26 @@
+.chats-button-container{
+    display: flex;
+    justify-content: space-between;
+}
+.chats-button-container button{
+    background-color: #5271ff;
+    border: none;
+    outline: none;
+    color: #d1f2f7;
+    height: 40px;
+    width: 85px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 5px 15px 25px rgba(0, 0, 0, 0.35);
+}
+.chats-button-container button:hover{
+    box-shadow: none;
+    background-color: #6d83e9;
+}
+.chats-button-container span{
+    font-size: 20px;
+    margin-right: 5px;
+}

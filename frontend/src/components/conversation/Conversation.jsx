@@ -4,11 +4,14 @@ import { useAuthContext } from '../../context/AuthContext';
 import { useSocketContext } from '../../context/SocketContext';
 import useMarkAsRead from '../../hooks/useMarkAsRead';
 import useConversation from '../../zustand/useConversation';
+import defaultChannelPic from '../../assets/pictures/default-channel-pic.jpg'
+import { useSelectedElement } from '../../context/SelectedElement';
 
 const Conversation = ({ conversation }) => {
     const { selectedConversation, setSelectedConversation, unreadCounts } = useConversation();
     const { authUser } = useAuthContext();
     const { markAsRead } = useMarkAsRead();
+    const { selectedElement } = useSelectedElement();
 
     const isSelected = selectedConversation?._id === conversation._id;
     const selectedColor = isSelected ? "#3e4a56" : "";
@@ -21,7 +24,7 @@ const Conversation = ({ conversation }) => {
     let name = otherParticipant?.username;
 
     if(conversation?.name){
-        profilePic = conversation?.icon;
+        profilePic = conversation?.icon || defaultChannelPic;
         name = conversation?.name;
     }
 
@@ -54,11 +57,11 @@ const Conversation = ({ conversation }) => {
             <div className='conversation-tile-content'>
                 <div className='conversation-tile-img'>
                     <img src={profilePic} alt="profile" />
-                    {isOnline && <div className='isOnline'></div>}
+                    {selectedElement === 'chat' && isOnline && <div className='isOnline'></div>}
                 </div>
                 <div>
                     <div>{name}</div>
-                    <div className='conversation-tile-last-msg'>{lastMessage}</div>
+                    <div className='conversation-tile-last-msg'>{lastMessage || 'Start a conversation 😀!!!'}</div>
                 </div>
             </div>
             <div className='conversation-tile-time'>

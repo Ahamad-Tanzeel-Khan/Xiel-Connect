@@ -9,7 +9,7 @@ const Favorites = () => {
   return (
     <div className='chats-conatiner'>
       <div className="chats-title">Favorites</div>
-      <SearchInput />
+      <SearchInput conversations={users}/>
       <Conversations conversations={users} loading={loading}/>
     </div>
   )

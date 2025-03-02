@@ -1,0 +1,105 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+.info-header{
+    font-family: "Poppins", serif;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+}
+.info-img{
+    border-radius: 50rem;
+    width: 90px;
+    height: 90px;
+    background-color: #303841;
+    border: 2px solid #36404a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.info-img img{
+    border-radius: 50rem;
+    width: 80px;
+}
+.info-name-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 14px;
+    margin-top: 15px;
+    gap: 5px;
+    color: #a4aecd;
+}
+.info-name{
+    color: aliceblue;
+    font-size: 20px;
+}
+
+.info-container hr{
+    width: 100%;
+    border: 0.5px solid #3f4953;
+    border-bottom: 0;
+}
+.info-body{
+    padding: 20px;
+}
+.info-bio{
+    display: flex;
+    justify-content: center;
+    color: #a4aecd;
+    padding: 15px;
+}
+.accordian strong{
+    color: #ffffff;
+}
+.accordian {
+    color: #a4aecd;
+}
+.info-participants-container{
+    flex-grow: 1;
+    overflow-y: scroll;
+}
+.info-participants-content{
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+}
+.info-participants-content img{
+    width: 30px;
+    height: 30px;
+    margin: 10px 20px;
+}
+.invitelink-container{
+    border-radius: 5px;
+    padding: 12px 16px;
+    border: 1px solid #3f4953;
+}
+.invitelink-container span{
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.invitelink{
+    display: flex;
+    justify-content: space-between;
+    font-weight: bolder;
+    color: #b9c0d4;
+    background-color: #303841;
+    border-radius: 6px;
+    margin-top: 15px;
+}
+.invitelink span{
+    font-size: 18px;
+    padding-left: 20px;
+}
+.invitelink svg{
+    cursor: pointer;
+    border-radius: 0px 5px 5px 0;
+    background-color: #47525e;
+    font-size: 22px;
+    color: #a4aecd;
+    padding: 10px;
+}

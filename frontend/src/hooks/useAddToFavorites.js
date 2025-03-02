@@ -11,6 +11,9 @@ const useAddToFavorites = () => {
         try {
             const res = await fetch(`/api/favorites/add-or-remove/${selectedConversation._id}`, {
                 method: 'PUT',
+                body: JSON.stringify({
+                    isChannel : selectedConversation.isChannel
+                }),
             });
 
             const data = await res.json();

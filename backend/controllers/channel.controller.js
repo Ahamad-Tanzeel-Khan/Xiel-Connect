@@ -1,6 +1,7 @@
 import Channel from "../models/channel.model.js";
 import Message from "../models/message.model.js";
 import crypto from "crypto";
+import { getReceiverSocketId, getSenderSocketId, io } from "../socket/socket.js";
 
 
 const generateInviteLink = () => {
@@ -11,13 +12,14 @@ const generateInviteLink = () => {
 
 export const createChannel = async (req, res) => {
     try {
-        const { name, participants, icon } = req.body;
+        const { name, description, participants, icon } = req.body;
         const creatorId = req.user.id;      
 
         const inviteLink = generateInviteLink();
 
         const channel = new Channel({
             name,
+            description,
             creatorId,
             admin: [creatorId],
             participants: [...participants, creatorId],
@@ -26,6 +28,13 @@ export const createChannel = async (req, res) => {
         });
 
         await channel.save();
+
+        channel.participants.forEach((participant) => {
+            const socketId = getReceiverSocketId(participant._id);
+            if (socketId) {
+                io.to(socketId).emit("newChannel", channel);
+            }
+        });
 
         return res.status(201).json({ message: "Channel created successfully", channel });
     } catch (error) {
@@ -48,7 +57,11 @@ export const getAllChannels = async (req, res) => {
             path: 'participants',
             select: 'fullname username profilePic'
         })
-        .populate('lastMessage');
+        .populate('lastMessage')
+        .populate({
+            path: 'creatorId',
+            select: 'fullname username profilePic'
+        });
         res.status(200).json(channels);
     } catch (error) {
         console.error(error);
@@ -80,12 +93,13 @@ export const joinChannel= async (req, res) => {
         const userId = req.user.id;
 
         const channel = await Channel.findOne({ inviteLink });
+
         if (!channel) {
-            return res.status(404).json({ message: "Channel not found" });
+            return res.status(404).json({ error: "Channel not found" });
         }
 
         if (channel.participants.includes(userId)) {
-            return res.status(400).json({ message: "You are already a member of this channel" });
+            return res.status(400).json({ error: "You are already a member of this channel" });
         }
 
         channel.participants.push(userId);
@@ -94,7 +108,7 @@ export const joinChannel= async (req, res) => {
         return res.status(200).json({ message: "Joined channel successfully", channel });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Server error", error });
+        return res.status(500).json({ error: "Server error", error });
     }
 };
 

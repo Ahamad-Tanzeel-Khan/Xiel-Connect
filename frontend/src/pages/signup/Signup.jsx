@@ -91,7 +91,7 @@ const Signup = () => {
                 </div>
 
                 <div className='signup-right-container'>
-                    <img src="/background/p1.jpg" alt=""/>
+                    <img src="/background/login-picture.jpg" alt=""/>
                 </div>
             </div>
         </div>

@@ -86,7 +86,6 @@ const useListenMessages = () => { // Accept selectedElement to track section
         });
 
         socket?.on("newConversation", (newConversation) => {
-            console.log("Received new conversation:", newConversation);
             // Update Zustand state directly to avoid stale closure issues:
             useConversation.setState((state) => {
               if (!state.conversations.some((c) => c._id === newConversation._id)) {
@@ -106,13 +105,27 @@ const useListenMessages = () => { // Accept selectedElement to track section
               });
             };
             playSound();
-          });
+        });
+
+        socket?.on("newChannel", (newChannel) => {
+            console.log("Received new channel:", newChannel);
+            // Update Zustand state directly to avoid stale closure issues:
+            useConversation.setState((state) => {
+              if (!state.channels.some((c) => c._id === newChannel._id)) {
+                const updatedChannels = [...state.channels, newChannel];
+                console.log("Updated channels:", updatedChannels);
+                return { channels: updatedChannels };
+              }
+              return {};
+            });
+        });
 
         return () => {
             socket?.off("newMessage");
             socket?.off("messageDeleted");
             socket?.off("conversationUpdate");
             socket?.off("newConversation");
+            socket?.off("newChannel");
         };
     }, [socket, setMessages, messages, updateConversationLastMessage, setConversations, conversations, selectedConversation, selectedElement, channels, setChannels]);
 

@@ -91,6 +91,7 @@ const useConversation = create((set) => ({
             ? {
                 ...conversation,
                 lastMessage: {
+                  _id: newMessage._id,
                   text: newMessage.message,
                   timestamp: new Date(),
                 },

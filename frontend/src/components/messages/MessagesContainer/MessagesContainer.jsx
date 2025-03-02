@@ -12,14 +12,22 @@ import Messages from '../Messages';
 import { useSocketContext } from '../../../context/SocketContext';
 import useDeleteForUser from '../../../hooks/useDeleteMessagesForUser';
 import useAddToFavorites from '../../../hooks/useAddToFavorites';
+import defaultChannelPic from '../../../assets/pictures/default-channel-pic.jpg'
+import { useSelectedElement } from '../../../context/SelectedElement';
+import Information from '../../info/Information';
+import { IoClose } from "react-icons/io5";
+
 
 const MessagesContainer = () => {
   const { selectedConversation, setSelectedConversation, favoriteConversations, conversations } = useConversation();
   const { authUser } = useAuthContext();
   const [slidingOut, setSlidingOut] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+  const [infoPanelClass, setInfoPanelClass] = useState("hidden");
 	const {onlineUsers} = useSocketContext();
   const {deleteForUser} = useDeleteForUser();
   const {addToFavorites} = useAddToFavorites();
+  const { selectedElement } = useSelectedElement();
 
   useEffect(() => {
     return () => setSelectedConversation(null);
@@ -39,9 +47,25 @@ const MessagesContainer = () => {
   let name = otherParticipant?.username;
 
   if(activeConversation?.isChannel){
-    profilePic = activeConversation?.icon;
+    profilePic = activeConversation?.icon || defaultChannelPic;
     name = activeConversation?.name;
   }
+
+  const handleNameClick = () => {
+    setShowInfo(true);
+    setTimeout(() => {
+      setInfoPanelClass("visible");
+    }, 50);
+  };
+  
+
+  const handleCloseInformation = () => {
+    setInfoPanelClass("slide-out");
+    setTimeout(() => {
+      setShowInfo(false);
+      setInfoPanelClass("hidden");
+    }, 400);
+  };
 
 
   const handleClick = () => {
@@ -67,34 +91,52 @@ const MessagesContainer = () => {
   }
 
   return (
-    <div className={`messages-container ${activeConversation ? 'slide-in' : ''} ${slidingOut ? 'slide-out' : ''}`}>
-      {!activeConversation ? <NoChatSelected /> : (
-        <>
-          <div className='msg-container-header'>
-            <div className='msg-profile'>
-              <IoChevronBackOutline onClick={handleClick} />
-              <img src={profilePic} alt="" />
-              <span> {name}</span>
-              {isOnline && <div className='online'></div>}
+    <div className='messages-container-wrapper'>
+      <div className={`messages-container ${activeConversation ? 'slide-in' : ''} ${slidingOut ? 'slide-out' : ''}`}>
+        {!activeConversation ? <NoChatSelected /> : (
+          <>
+            <div className='msg-container-header'>
+              <div className='msg-profile'>
+                <IoChevronBackOutline onClick={handleClick} />
+                <img src={profilePic} alt="" />
+                <span onClick={handleNameClick} style={{ cursor: "pointer" }}>
+                    {name}
+                  </span>
+                {selectedElement === 'chat' && isOnline && <div className='online'></div>}
+              </div>
+              <div className='chat-functions'>
+                {!activeConversation.isChannel && activeConversation.participants && (
+                  <>
+                    {<div onClick={handleToggleFavorites}>
+                      {isFavorite ? <FaStar style={{color: "#d9b902"}}/> : <FaRegStar />}
+                    </div>}
+                    <IoCall />
+                    <FaVideo />
+                  </>
+                )}
+                <RiDeleteBin6Line onClick={handleDelete}/>
+              </div>
             </div>
-            <div className='chat-functions'>
-              {<div onClick={handleToggleFavorites}>
-                {isFavorite ? <FaStar style={{color: "#d9b902"}}/> : <FaRegStar />}
-              </div>}
-              <IoCall />
-              <FaVideo />
-              <RiDeleteBin6Line onClick={handleDelete}/>
-            </div>
-          </div>
-          <hr className='msg-header-line' />
-          <div className='msgs-main-container'>
-            <Messages />
-          </div>
-          <div className='msg-bottom-main-container'>
             <hr className='msg-header-line' />
-            <div className='msg-bottom-container'>
-              <MessageInput />
+            <div className='msgs-main-container'>
+              <Messages />
             </div>
+            <div className='msg-bottom-main-container'>
+              <hr className='msg-header-line' />
+              <div className='msg-bottom-container'>
+                <MessageInput />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {activeConversation?.isChannel && showInfo && (
+        <>
+          <div className='info-background'></div>
+          <div className={`glass info-panel ${infoPanelClass}`}>
+            <div className='info-panel-btn' onClick={handleCloseInformation}><IoClose /></div>
+            <Information conversation={activeConversation}/>
           </div>
         </>
       )}
